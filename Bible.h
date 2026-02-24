@@ -23,6 +23,7 @@
 #include <string>
 #include <stdio.h>
 #include <stdlib.h>
+#include <map>
 
 using namespace std;
 
@@ -43,12 +44,16 @@ private:
    string infile;     // file path name
    ifstream instream; // input stream, used when file is open
    bool isOpen;       // true if file is open
-   // OPTIONAL: you may add variables to keep track of
-   // the current line and/or reference when scanning the file
+
+   // Map index that associates a Bible reference with its byte offset
+   // position in the text file
+   map<Ref, int> refs;
 
 public:
    Bible();               // Default constructor
    Bible(const string s); // Constructor – pass name of bible file
+
+   int buildTextIndex(string filename);
 
    // REQUIRED: Find and return a verse in this Bible, given a reference
    Verse lookup(const Ref ref, LookupResult &status);

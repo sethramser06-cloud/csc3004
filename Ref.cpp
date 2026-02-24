@@ -146,12 +146,13 @@ void Ref::display()
 {
    string bookName = BOOK_NAMES[book];
    // TODO: modify display function to show book name instead of book number
-   cout << bookName << " " << chapter << "<br>" << endl;
+   cout << bookName << " " << chapter << endl;
    cout << verse << " ";
 }
 
 void Ref::displayNext()
 {
    // puts the verse number only on the same line as the verse text
-   cout << "<br>" << verse << " ";
+   cout << endl
+        << verse << " ";
 }
