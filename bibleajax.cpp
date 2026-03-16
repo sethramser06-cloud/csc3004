@@ -50,48 +50,11 @@ int main()
    // GET THE INPUT DATA
    // browser sends us a string of field name/value pairs from HTML form
    // retrieve the value for each appropriate field name
-   form_iterator st = cgi.getElement("search_type");
+   form_iterator version = cgi.getElement("version");
    form_iterator bookIt = cgi.getElement("book");
    form_iterator chapterIt = cgi.getElement("chapter");
    form_iterator verseIt = cgi.getElement("verse");
    form_iterator nv = cgi.getElement("num_verse");
-
-   // Convert and check input data
-   bool validInput = false;
-   if (bookIt != cgi.getElements().end() && chapterIt != cgi.getElements().end() && verseIt != cgi.getElements().end())
-   {
-      int bookNum = bookIt->getIntegerValue();
-      int chapterNum = chapterIt->getIntegerValue();
-      int verseNum = verseIt->getIntegerValue();
-      if (bookNum > 66)
-      {
-         cout << "<p>The book number (" << bookNum << ") is too high.</p>" << endl;
-      }
-      else if (bookNum <= 0)
-      {
-         cout << "<p>The book must be a positive number.</p>" << endl;
-      }
-      else if (chapterNum > 150)
-      {
-         cout << "<p>The chapter number (" << chapterNum << ") is too high.</p>" << endl;
-      }
-      else if (chapterNum <= 0)
-      {
-         cout << "<p>The chapter must be a positive number.</p>" << endl;
-      }
-      else if (verseNum > 176)
-      {
-         cout << "<p>The verse number (" << verseNum << ") is too high.</p>" << endl;
-      }
-      else if (verseNum <= 0)
-      {
-         cout << "<p>The verse must be a positive number.</p>" << endl;
-      }
-      else
-      {
-         validInput = true;
-      }
-   }
 
    // TODO: OTHER INPUT VALUE CHECKS ARE NEEDED ... but that's up to you!
 
@@ -99,62 +62,101 @@ int main()
     *        TO LOOK UP THE REQUESTED VERSES
     */
    // Create Bible object to process the raw text file
-   Bible webBible("/home/class/csc3004/Bibles/web-complete");
+   Bible curBible;
+   switch (version->getIntegerValue())
+   {
+   case 1:
+      curBible = Bible("/home/class/csc3004/Bibles/web-complete");
+      break;
+   case 2:
+      curBible = Bible("/home/class/csc3004/Bibles/kjv-complete");
+      break;
+   case 3:
+      curBible = Bible("/home/class/csc3004/Bibles/dby-complete");
+      break;
+   case 4:
+      curBible = Bible("/home/class/csc3004/Bibles/ylt-complete");
+      break;
+   case 5:
+      curBible = Bible("/home/class/csc3004/Bibles/webster-complete");
+      break;
+   default:
+      cout << "Error! Version does not exist!";
+      return 0;
+   }
 
    Verse currentVerse;
-   int bookNum, chapterNum, verseNum;
-   int numVerses = 1;
+   int bookNum, chapterNum, verseNum, numVerses;
    LookupResult result;
 
-   if (validInput)
+   bookNum = bookIt->getIntegerValue();
+   chapterNum = chapterIt->getIntegerValue();
+   verseNum = verseIt->getIntegerValue();
+
+   if (nv != cgi.getElements().end())
    {
-      bookNum = bookIt->getIntegerValue();
-      chapterNum = chapterIt->getIntegerValue();
-      verseNum = verseIt->getIntegerValue();
+      numVerses = nv->getIntegerValue();
+   }
+   else
+   {
+      numVerses = 1;
+   }
 
-      if (nv != cgi.getElements().end())
-      {
-         numVerses = nv->getIntegerValue();
-      }
-      else
-      {
-         numVerses = 1;
-      }
+   Ref ref(bookNum, chapterNum, verseNum);
+   currentVerse = curBible.lookup(ref, result);
 
-      Ref ref(bookNum, chapterNum, verseNum);
-      currentVerse = webBible.lookup(ref, result);
+   if (result != SUCCESS)
+   {
+      switch (result)
+      {
+      case NO_BOOK:
+         cout << "<p>Book number " << ref.getBook() << " does not exist.</p>" << endl;
+         return -1;
+      case NO_CHAPTER:
+         cout << "<p>Chapter number " << ref.getChapter() << " does not exist in "
+              << ref.getBookName(ref.getBook()) << ".</p>" << endl;
+         return -2;
+      case NO_VERSE:
+         cout << "<p>Verse number " << ref.getVerse() << " does not exist in "
+              << ref.getBookName(ref.getBook()) << " chapter " << ref.getChapter() << ".</p>" << endl;
+         return -3;
+      default:
+         cout << "<p>An unknown error occurred.</p>" << endl;
+         return -4;
+      }
+   }
+
+   currentVerse.display();
+
+   for (int i = 1; i < numVerses; i++)
+   {
+      int prevChapter = currentVerse.getRef().getChapter();
+      int prevBook = currentVerse.getRef().getBook();
+      currentVerse = curBible.nextVerse(result);
 
       if (result != SUCCESS)
       {
-         cout << webBible.error(result) << endl;
-         return 1;
+         cout << curBible.error(result) << endl;
+         break;
       }
 
-      currentVerse.display();
-
-      for (int i = 1; i < numVerses; i++)
+      if (prevChapter < currentVerse.getRef().getChapter())
       {
-         int prevChapter = currentVerse.getRef().getChapter();
-         currentVerse = webBible.nextVerse(result);
-
-         if (result != SUCCESS)
-         {
-            cout << webBible.error(result) << endl;
-            break;
-         }
-
-         if (prevChapter < currentVerse.getRef().getChapter())
-         {
-            currentVerse.display();
-         }
-         else
-         {
-            currentVerse.displayNext();
-         }
+         cout << "<br/>"; // add a line break between chapters
+         currentVerse.display();
       }
-      cout << "<p>Result status: " << result << "</p>" << endl;
-      cout << endl;
+      else if (prevBook < currentVerse.getRef().getBook())
+      {
+         cout << "<br/><br/>"; // add a line break between books
+         currentVerse.display();
+      }
+      else
+      {
+         currentVerse.displayNext();
+      }
    }
+   // cout << "<p>Result status: " << result << "</p>" << endl;
+   cout << endl;
    /* SEND BACK THE RESULTS
     * Finally we send the result back to the client on the standard output stream
     * in HTML text format.

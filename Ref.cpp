@@ -87,9 +87,10 @@ Ref::Ref(const int b, const int c, const int v)
 }
 
 // Accessors
-int Ref::getBook() { return book; }       // Access book number
-int Ref::getChapter() { return chapter; } // Access chapter number
-int Ref::getVerse() { return verse; };    // Access verse number
+int Ref::getBook() { return book; }                            // Access book number
+string Ref::getBookName(int book) { return BOOK_NAMES[book]; } // Access book name
+int Ref::getChapter() { return chapter; }                      // Access chapter number
+int Ref::getVerse() { return verse; };                         // Access verse number
 
 // REQUIRED: == comparison
 bool Ref::operator==(const Ref &ref) const
@@ -145,12 +146,15 @@ void Ref::display()
 {
    string bookName = BOOK_NAMES[book];
    // TODO: modify display function to show book name instead of book number
-   cout << bookName << " " << chapter << "<br>" << endl;
+   cout << endl
+        << bookName << " " << chapter << endl
+        << endl;
    cout << verse << " ";
 }
 
 void Ref::displayNext()
 {
    // puts the verse number only on the same line as the verse text
-   cout << "<br>" << verse << " ";
+   cout << endl
+        << verse << " ";
 }

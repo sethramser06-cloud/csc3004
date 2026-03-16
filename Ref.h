@@ -37,9 +37,10 @@ public:
    Ref(const int, const int, const int); // Construct from three integers
 
    // Accessors
-   int getBook();    // Access book number
-   int getChapter(); // Access chapter number
-   int getVerse();   // Access verse number
+   int getBook();                // Access book number
+   string getBookName(int book); // Access book name
+   int getChapter();             // Access chapter number
+   int getVerse();               // Access verse number
 
    // REQUIRED Comparison: determine if two references are equal
    bool operator==(const Ref &) const;
